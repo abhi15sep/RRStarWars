@@ -1,0 +1,73 @@
+service: retoTecnicoStarWars
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  region: us-west-2
+  environment:
+    REGION: ${self:provider.region}
+    PLANET_TABLE: PlanetTable
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Query"
+        - "dynamodb:Scan"
+      Resource: 
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PLANET_TABLE}"    
+   
+functions:
+  obtPlanetas:
+    handler: handler.obtPlanetas
+    events:
+      - http:
+          method: get
+          path: planetas
+  obtPlaneta:
+    handler: handler.obtPlaneta
+    events:
+      - http:
+          method: get
+          path: planeta/{idPlaneta}
+  crearPlaneta:
+    handler: handler.crearPlaneta
+    events:
+      - http:
+          method: post
+          path: planeta
+  obtPlanetasDyn:
+    handler: handler.obtPlanetasDyn
+    events:
+      - http:
+          method: get
+          path: planetasDyn
+  obtPlanetaDyn:
+    handler: handler.obtPlanetaDyn
+    events:
+      - http:
+          method: get
+          path: planetadyn/{idPlaneta}                
+resources:
+  Resources:
+    PlanetTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+        - AttributeName: "idPlaneta"
+          AttributeType: "S"
+        KeySchema:
+        - AttributeName: "idPlaneta"
+          KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.PLANET_TABLE}
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE                                
